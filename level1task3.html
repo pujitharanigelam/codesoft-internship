@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator - Another Way</title>
+
+    <style>
+        body {
+            background: #eef2f7;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .calc {
+            width: 320px;
+            background: rgb(99, 176, 243);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        #screen {
+            width: 100%;
+            height: 50px;
+            font-size: 20px;
+            text-align: right;
+            padding: 2px;
+            border: none;
+            border-radius: 12px;
+            background: #ddceda;
+            margin-bottom: 15px;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            padding: 18px;
+            font-size: 20px;
+            border: none;
+            border-radius: 10px;
+            background: #d1cbcf;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background: #8fcc55;
+        }
+
+        .op {
+            background: #cfd9de;
+            color: rgb(13, 17, 13);
+        }
+
+        .op:hover {
+            background: #0284c7;
+        }
+
+        .clear {
+            background: #b8b1b5;
+            color: rgb(35, 42, 38);
+            grid-column: span 4;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="calc">
+        <input type="text" id="screen" disabled />
+
+        <div class="buttons">
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button class="op">/</button>
+
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button class="op">*</button>
+
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button class="op">-</button>
+
+            <button>0</button>
+            <button>.</button>
+            <button>=</button>
+            <button class="op">+</button>
+
+            <button class="clear">CLEAR</button>
+        </div>
+    </div>
+
+
+<script>
+    const screen = document.getElementById("screen");
+    const buttons = document.querySelectorAll("button");
+
+    buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const value = btn.textContent;
+
+            if (value === "CLEAR") {
+                screen.value = "";
+            }
+            else if (value === "=") {
+                try {
+                    screen.value = eval(screen.value);
+                } catch {
+                    screen.value = "Error";
+                }
+            }
+            else {
+                screen.value += value;
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
