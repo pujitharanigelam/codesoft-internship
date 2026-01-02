@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Online Quiz Maker</title>
+  <style>
+    :root { --primary:#2563eb; --bg:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#9ca3af; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial; background:var(--bg); color:var(--text); }
+    header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #1f2937; position:sticky; top:0; background:var(--bg); z-index:10; }
+    nav a, button.link { color:var(--text); text-decoration:none; margin-right:12px; font-size:14px; }
+    .container { max-width:960px; margin:0 auto; padding:16px; }
+    .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; }
+    .card { background:var(--card); border:1px solid #1f2937; border-radius:10px; padding:16px; }
+    .btn { background:var(--primary); color:white; border:none; border-radius:8px; padding:10px 14px; cursor:pointer; }
+    .btn.secondary { background:#374151; }
+    .btn.ghost { background:transparent; border:1px solid #374151; }
+    input, select, textarea { width:100%; padding:10px; border-radius:8px; border:1px solid #374151; background:#0b1220; color:var(--text); }
+    label { font-size:12px; color:var(--muted); display:block; margin-bottom:6px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; }
+    .row > * { flex:1; }
+    .list { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+    .chip { display:inline-block; padding:6px 10px; border-radius:999px; background:#1f2937; color:#cbd5e1; font-size:12px; }
+    .progress { height:8px; background:#1f2937; border-radius:999px; overflow:hidden; }
+    .progress > div { height:100%; background:var(--primary); width:0%; transition:width .25s ease; }
+    .hidden { display:none !important; }
+    footer { padding:24px 16px; color:#94a3b8; font-size:12px; text-align:center; }
+    @media (max-width:640px) { .grid { display:block; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div><strong>Online Quiz Maker</strong></div>
+    <nav>
+      <a href="#" onclick="route('home')">Home</a>
+      <a href="#" onclick="route('list')">Quizzes</a>
+      <a href="#" onclick="route('create')">Create</a>
+      <button class="link" onclick="route('auth')">Login</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <!-- Home -->
+    <section id="home" class="card">
+      <h2>Welcome</h2>
+      <p>Create quizzes or take one instantly. Build questions with multiple-choice answers and get immediate feedback.</p>
+      <div class="row">
+        <button class="btn" onclick="route('create')">Create a quiz</button>
+        <button class="btn secondary" onclick="route('list')">Browse quizzes</button>
+        <button class="btn ghost" onclick="startDemo()">FOR DEMO CLICK HERE</button>
+      </div>
+    </section>
+
+    <!-- Quiz listing -->
+    <section id="list" class="card hidden">
+      <div class="row" style="align-items:center;">
+        <input id="search" placeholder="Search quizzes by title…" oninput="renderList()" />
+        <button class="btn" onclick="route('create')">+ New quiz</button>
+      </div>
+      <div id="quizList" class="list" style="margin-top:12px;"></div>
+    </section>
+
+    <!-- Create quiz -->
+    <section id="create" class="card hidden">
+      <h3>Create a new quiz</h3>
+      <div class="row">
+        <div>
+          <label>Title</label>
+          <input id="qTitle" placeholder="e.g., JavaScript Basics" />
+        </div>
+        <div>
+          <label>Description</label>
+          <input id="qDesc" placeholder="Short summary" />
+        </div>
+      </div>
+      <div id="questionsWrap" style="margin-top:12px;"></div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn secondary" onclick="addQuestion()">+ Add question</button>
+        <button class="btn" onclick="saveQuiz()">Publish quiz</button>
+      </div>
+    </section>
+
+    <!-- Take quiz -->
+    <section id="take" class="card hidden">
+      <div class="row" style="align-items:center;">
+        <h3 id="takeTitle" style="margin:0;">Quiz</h3>
+        <span class="chip" id="takeMeta"></span>
+      </div>
+      <div class="progress" style="margin:12px 0;"><div id="progressBar"></div></div>
+      <div id="questionView"></div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn secondary" onclick="prevQ()">Previous</button>
+        <button class="btn" onclick="nextQ()">Next</button>
+        <button class="btn ghost" onclick="submitQuiz()">Submit</button>
+      </div>
+    </section>
+
+    <!-- Results -->
+    <section id="results" class="card hidden">
+      <h3>Results</h3>
+      <p id="scoreLine"></p>
+      <div id="breakdown"></div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn secondary" onclick="route('list')">Back to quizzes</button>
+        <button class="btn" onclick="retake()">Retake</button>
+      </div>
+    </section>
+
+    <!-- Auth -->
+    <section id="auth" class="card hidden">
+      <h3>User authentication</h3>
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="authEmail" placeholder="you@example.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="authPass" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" onclick="fakeLogin()">Login</button>
+        <button class="btn secondary" onclick="fakeRegister()">Register</button>
+      </div>
+      <p class="chip" id="authStatus" style="margin-top:12px;"></p>
+    </section>
+  </main>
+
+  <footer>Demo-only: all data stored in your browser. Add backend later for persistence and auth.</footer>
+
+  <script>
+    // Simple router
+    function route(id) {
+      for (const el of document.querySelectorAll('main > section')) el.classList.add('hidden');
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'list') renderList();
+      if (id === 'create') renderCreateForm();
+    }
+
+    // Local storage helpers
+    const DB = {
+      key: 'quiz_db_v1',
+      load() { return JSON.parse(localStorage.getItem(this.key) || '[]'); },
+      save(data) { localStorage.setItem(this.key, JSON.stringify(data)); }
+    };
+    const Auth = {
+      key: 'quiz_auth',
+      get() { return JSON.parse(localStorage.getItem(this.key) || 'null'); },
+      set(u) { localStorage.setItem(this.key, JSON.stringify(u)); }
+    };
+
+    // Seed demo data
+    const demoQuiz = {
+      id: crypto.randomUUID(),
+      title: 'JavaScript Basics',
+      description: 'Test your fundamentals.',
+      author: 'Demo',
+      questions: [
+        { prompt: 'Which defines a variable?', options: ['var', 'make', 'def', 'let()'], correctIndex: 0 },
+        { prompt: 'Which is an array?', options: ['{}', '[]', '()', '<>'], correctIndex: 1 },
+        { prompt: 'Strict equality operator?', options: ['==', '===', '=!', '=>'], correctIndex: 1 }
+      ]
+    };
+    if (!DB.load().length) DB.save([demoQuiz]);
+
+    // List
+    function renderList() {
+      const term = (document.getElementById('search').value || '').toLowerCase();
+      const data = DB.load().filter(q => q.title.toLowerCase().includes(term));
+      const container = document.getElementById('quizList');
+      container.innerHTML = '';
+      data.forEach(q => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h4 style="margin:0;">${q.title}</h4>
+          <p style="color:#cbd5e1; margin:6px 0;">${q.description || ''}</p>
+          <p class="chip">${q.questions.length} questions</p>
+          <div class="row" style="margin-top:8px;">
+            <button class="btn" onclick="openTake('${q.id}')">Take quiz</button>
+            <button class="btn secondary" onclick="editQuiz('${q.id}')">Edit</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+      if (!data.length) container.innerHTML = '<p>No quizzes found.</p>';
+    }
+
+    // Create
+    let createState = { title:'', description:'', questions: [] };
+    function renderCreateForm() {
+      document.getElementById('qTitle').value = createState.title || '';
+      document.getElementById('qDesc').value = createState.description || '';
+      const wrap = document.getElementById('questionsWrap');
+      wrap.innerHTML = '';
+      createState.questions.forEach((q, qi) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.background = '#0b1220';
+        card.innerHTML = `
+          <label>Question ${qi+1}</label>
+          <input placeholder="Prompt" value="${q.prompt}" oninput="updatePrompt(${qi}, this.value)" />
+          <div class="row" style="margin-top:8px;">
+            ${q.options.map((opt, oi) => `
+              <div>
+                <label>Option ${oi+1}</label>
+                <input value="${opt}" oninput="updateOption(${qi}, ${oi}, this.value)" />
+              </div>
+            `).join('')}
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <div>
+              <label>Correct answer index</label>
+              <select onchange="updateCorrect(${qi}, this.value)">
+                ${q.options.map((_, oi) => `<option value="${oi}" ${q.correctIndex==oi?'selected':''}>${oi+1}</option>`).join('')}
+              </select>
+            </div>
+            <button class="btn secondary" onclick="removeQuestion(${qi})">Remove</button>
+          </div>
+        `;
+        wrap.appendChild(card);
+      });
+    }
+    function addQuestion() {
+      createState.questions.push({ prompt:'', options:['','','',''], correctIndex:0 });
+      renderCreateForm();
+    }
+    function updatePrompt(qi, v) { createState.questions[qi].prompt = v; }
+    function updateOption(qi, oi, v) { createState.questions[qi].options[oi] = v; }
+    function updateCorrect(qi, v) { createState.questions[qi].correctIndex = +v; }
+    function removeQuestion(qi) { createState.questions.splice(qi, 1); renderCreateForm(); }
+    document.getElementById('qTitle').addEventListener('input', e => createState.title = e.target.value);
+    document.getElementById('qDesc').addEventListener('input', e => createState.description = e.target.value);
+    function saveQuiz() {
+      if (!createState.title || !createState.questions.length) return alert('Add a title and at least one question.');
+      if (createState.questions.some(q => !q.prompt || q.options.some(o => !o))) return alert('Fill all prompts and options.');
+      const data = DB.load();
+      const author = (Auth.get()?.email) || 'Anonymous';
+      const quiz = { id: crypto.randomUUID(), title:createState.title, description:createState.description, author, questions:createState.questions };
+      DB.save([quiz, ...data]);
+      createState = { title:'', description:'', questions: [] };
+      route('list');
+    }
+
+    // Edit existing quiz
+    function editQuiz(id) {
+      const qz = DB.load().find(q => q.id === id);
+      if (!qz) return;
+      createState = { title:qz.title, description:qz.description, questions: JSON.parse(JSON.stringify(qz.questions)), id:qz.id };
+      route('create');
+      // Override save to update
+      window.saveQuiz = function() {
+        if (!createState.title || !createState.questions.length) return alert('Add a title and at least one question.');
+        const all = DB.load();
+        const idx = all.findIndex(q => q.id === createState.id);
+        if (idx >= 0) {
+          all[idx] = { ...all[idx], title:createState.title, description:createState.description, questions:createState.questions };
+          DB.save(all);
+          createState = { title:'', description:'', questions: [] };
+          route('list');
+        }
+      };
+      renderCreateForm();
+    }
+
+    // Take quiz
+    let takeState = { quiz:null, index:0, answers:[] };
+    function openTake(id) {
+      const qz = DB.load().find(q => q.id === id);
+      if (!qz) return;
+      takeState = { quiz:qz, index:0, answers:Array(qz.questions.length).fill(null) };
+      document.getElementById('takeTitle').textContent = qz.title;
+      document.getElementById('takeMeta').textContent = `${qz.questions.length} questions`;
+      renderQuestion();
+      route('take');
+    }
+    function renderQuestion() {
+      const { quiz, index, answers } = takeState;
+      const q = quiz.questions[index];
+      document.getElementById('progressBar').style.width = `${((index)/quiz.questions.length)*100}%`;
+      const view = document.getElementById('questionView');
+      view.innerHTML = `
+        <h4 style="margin:0 0 6px;">${index+1}. ${q.prompt}</h4>
+        <div class="list">
+          ${q.options.map((opt, oi) => `
+            <label class="card" style="cursor:pointer;">
+              <input type="radio" name="opt" ${answers[index]===oi?'checked':''} onchange="choose(${oi})" />
+              <span style="margin-left:8px;">${opt}</span>
+            </label>
+          `).join('')}
+        </div>
+      `;
+    }
+    function choose(oi) { takeState.answers[takeState.index] = oi; }
+    function prevQ() { takeState.index = Math.max(0, takeState.index - 1); renderQuestion(); }
+    function nextQ() { takeState.index = Math.min(takeState.quiz.questions.length - 1, takeState.index + 1); renderQuestion(); }
+    function submitQuiz() {
+      const { quiz, answers } = takeState;
+      if (answers.some(a => a === null)) if (!confirm('Some answers are blank. Submit anyway?')) return;
+      const correctCount = answers.reduce((acc, ans, i) => acc + (ans === quiz.questions[i].correctIndex ? 1 : 0), 0);
+      const score = Math.round((correctCount / quiz.questions.length) * 100);
+      // render results
+      document.getElementById('scoreLine').textContent = `Your score: ${score}% (${correctCount}/${quiz.questions.length})`;
+      const breakdown = document.getElementById('breakdown');
+      breakdown.innerHTML = quiz.questions.map((q, i) => {
+        const isCorrect = answers[i] === q.correctIndex;
+        const you = answers[i] != null ? q.options[answers[i]] : 'No answer';
+        const cor = q.options[q.correctIndex];
+        return `
+          <div class="card" style="margin-top:8px; border-color:${isCorrect ? '#14532d' : '#7f1d1d'};">
+            <div><strong>Q${i+1}:</strong> ${q.prompt}</div>
+            <div style="margin-top:6px;"><span class="chip" style="background:${isCorrect?'#022c22':'#1e1b4b'};">${isCorrect?'Correct':'Incorrect'}</span></div>
+            <div style="margin-top:6px;">Your answer: ${you}</div>
+            <div>Correct answer: ${cor}</div>
+          </div>
+        `;
+      }).join('');
+      route('results');
+    }
+    function retake() { openTake(takeState.quiz.id); }
+
+    // Auth (demo)
+    function fakeLogin() {
+      const email = document.getElementById('authEmail').value;
+      const pass = document.getElementById('authPass').value;
+      if (!email || !pass) return alert('Enter email and password.');
+      Auth.set({ email });
+      document.getElementById('authStatus').textContent = `Logged in as ${email}`;
+    }
+    function fakeRegister() {
+      const email = document.getElementById('authEmail').value;
+      const pass = document.getElementById('authPass').value;
+      if (!email || !pass) return alert('Enter email and password.');
+      Auth.set({ email });
+      document.getElementById('authStatus').textContent = `Registered and logged in as ${email}`;
+    }
+
+    // Demo CTA
+    function startDemo() { openTake(DB.load()[0].id); }
+
+    // Init
+    route('home');
+  </script>
+</body>
+</html>
